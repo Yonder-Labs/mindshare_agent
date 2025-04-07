@@ -1,0 +1,24 @@
+services:
+  mindshare-agent:
+    platform: linux/amd64  
+    image: hasselalcala/mindshare-agent:latest@sha256:<codehash>
+    container_name: mindshare-agent
+    environment:
+      - PYTHONPATH=/app
+      - PYTHONUNBUFFERED=1
+      - KAITO_API_KEY=${KAITO_API_KEY}
+      - INTENT_ACCOUNT_ID=${INTENT_ACCOUNT_ID}
+      - INTENT_PRIVATE_KEY=${INTENT_PRIVATE_KEY}
+      - NETWORK=${NETWORK}
+      - SCHEDULE_INTERVAL=${SCHEDULE_INTERVAL}
+      - USE_STATIC_ACCOUNT=${USE_STATIC_ACCOUNT}
+      - SIGN_INTENT_CONTRACT=${SIGN_INTENT_CONTRACT}
+      - SIGNER_PUBLIC_KEY_USING_MINDSHARE_ACCOUNT=${SIGNER_PUBLIC_KEY_USING_MINDSHARE_ACCOUNT}
+      - USE_MOCK_MINDSHARE=${USE_MOCK_MINDSHARE}
+      - AGENT_ID=${AGENT_ID}
+      - AGENT_KEY=${AGENT_KEY}
+    ports:
+      - '8000:8000'
+    volumes:
+            - /var/run/tappd.sock:/var/run/tappd.sock
+    restart: always

@@ -1,0 +1,186 @@
+{
+    "rootfs_hash": "738ae348dbf674b3399300c0b9416c203e9b645c6ffee233035d09003cccad12f71becc805ad8d97575bc790c6819216",
+    "mrtd": "c68518a0ebb42136c12b2275164f8c72f25fa9a34392228687ed6e9caeb9c0f1dbd895e9cf475121c029dc47e70e91fd",
+    "rtmr0": "85e0855a6384fa1c8a6ab36d0dcbfaa11a5753e5a070c08218ae5fe872fcb86967fd2449c29e22e59dc9fec998cb6547",
+    "rtmr1": "4a7db64a609c77e85f603c23e9a9fd03bfd9e6b52ce527f774a598e66d58386026cea79b2aea13b81a0b70cfacdec0ca",
+    "rtmr2": "8a4fe048fea22663152ef128853caa5c033cbe66baf32ba1ff7f6b1afc1624c279f50a4cbc522a735ca6f69551e61ef2",
+    "rtmr3": "561c1b02351cd6f7c803dd36bc95ba25463aa025ce7761156260c9131a5d7c03aeccc10e12160ec3205bb2876a203a7f",
+    "event_log": [
+      {
+        "imr": 0,
+        "event_type": 2147483659,
+        "digest": "0e35f1b315ba6c912cf791e5c79dd9d3a2b8704516aa27d4e5aa78fb09ede04aef2bbd02ac7a8734c48562b9c26ba35d",
+        "event": "",
+        "event_payload": "095464785461626c65000100000000000000af96bb93f2b9b84e9462e0ba745642360090800000000000"
+      },
+      {
+        "imr": 0,
+        "event_type": 2147483658,
+        "digest": "344bc51c980ba621aaa00da3ed7436f7d6e549197dfe699515dfa2c6583d95e6412af21c097d473155875ffd561d6790",
+        "event": "",
+        "event_payload": "2946762858585858585858582d585858582d585858582d585858582d58585858585858585858585829000000c0ff000000000040080000000000"
+      },
+      {
+        "imr": 0,
+        "event_type": 2147483649,
+        "digest": "9dc3a1f80bcec915391dcda5ffbb15e7419f77eab462bbf72b42166fb70d50325e37b36f93537a863769bcf9bedae6fb",
+        "event": "",
+        "event_payload": "61dfe48bca93d211aa0d00e098032b8c0a00000000000000000000000000000053006500630075007200650042006f006f007400"
+      },
+      {
+        "imr": 0,
+        "event_type": 2147483649,
+        "digest": "6f2e3cbc14f9def86980f5f66fd85e99d63e69a73014ed8a5633ce56eca5b64b692108c56110e22acadcef58c3250f1b",
+        "event": "",
+        "event_payload": "61dfe48bca93d211aa0d00e098032b8c0200000000000000000000000000000050004b00"
+      },
+      {
+        "imr": 0,
+        "event_type": 2147483649,
+        "digest": "d607c0efb41c0d757d69bca0615c3a9ac0b1db06c557d992e906c6b7dee40e0e031640c7bfd7bcd35844ef9edeadc6f9",
+        "event": "",
+        "event_payload": "61dfe48bca93d211aa0d00e098032b8c030000000000000000000000000000004b0045004b00"
+      },
+      {
+        "imr": 0,
+        "event_type": 2147483649,
+        "digest": "08a74f8963b337acb6c93682f934496373679dd26af1089cb4eaf0c30cf260a12e814856385ab8843e56a9acea19e127",
+        "event": "",
+        "event_payload": "cbb219d73a3d9645a3bcdad00e67656f0200000000000000000000000000000064006200"
+      },
+      {
+        "imr": 0,
+        "event_type": 2147483649,
+        "digest": "18cc6e01f0c6ea99aa23f8a280423e94ad81d96d0aeb5180504fc0f7a40cb3619dd39bd6a95ec1680a86ed6ab0f9828d",
+        "event": "",
+        "event_payload": "cbb219d73a3d9645a3bcdad00e67656f03000000000000000000000000000000640062007800"
+      },
+      {
+        "imr": 0,
+        "event_type": 4,
+        "digest": "394341b7182cd227c5c6b07ef8000cdfd86136c4292b8e576573ad7ed9ae41019f5818b4b971c9effc60e1ad9f1289f0",
+        "event": "",
+        "event_payload": "00000000"
+      },
+      {
+        "imr": 0,
+        "event_type": 10,
+        "digest": "68cd79315e70aecd4afe7c1b23a5ed7b3b8e51a477e1739f111b3156def86bbc56ebf239dcd4591bc7a9fff90023f481",
+        "event": "",
+        "event_payload": "414350492044415441"
+      },
+      {
+        "imr": 0,
+        "event_type": 10,
+        "digest": "6bc203b3843388cc4918459c3f5c6d1300a796fb594781b7ecfaa3ae7456975f095bfcc1156c9f2d25e8b8bc1b520f66",
+        "event": "",
+        "event_payload": "414350492044415441"
+      },
+      {
+        "imr": 0,
+        "event_type": 10,
+        "digest": "ec9e8622a100c399d71062a945f95d8e4cdb7294e8b1c6d17a6a8d37b5084444000a78b007ef533f290243421256d25c",
+        "event": "",
+        "event_payload": "414350492044415441"
+      },
+      {
+        "imr": 1,
+        "event_type": 2147483651,
+        "digest": "f51c5215e1ae1e5202fb0a710248e13c2bf2824b7f0b2a1675f63e9fd37befb93fbb97a4f8630879168b76aee3b198e2",
+        "event": "",
+        "event_payload": "1860447b0000000000f4b2000000000000000000000000002a000000000000000403140072f728144ab61e44b8c39ebdd7f893c7040412006b00650072006e0065006c0000007fff0400"
+      },
+      {
+        "imr": 0,
+        "event_type": 2147483650,
+        "digest": "1dd6f7b457ad880d840d41c961283bab688e94e4b59359ea45686581e90feccea3c624b1226113f824f315eb60ae0a7c",
+        "event": "",
+        "event_payload": "61dfe48bca93d211aa0d00e098032b8c0900000000000000020000000000000042006f006f0074004f0072006400650072000000"
+      },
+      {
+        "imr": 0,
+        "event_type": 2147483650,
+        "digest": "23ada07f5261f12f34a0bd8e46760962d6b4d576a416f1fea1c64bc656b1d28eacf7047ae6e967c58fd2a98bfa74c298",
+        "event": "",
+        "event_payload": "61dfe48bca93d211aa0d00e098032b8c08000000000000003e0000000000000042006f006f0074003000300030003000090100002c0055006900410070007000000004071400c9bdb87cebf8344faaea3ee4af6516a10406140021aa2c4614760345836e8ab6f46623317fff0400"
+      },
+      {
+        "imr": 1,
+        "event_type": 2147483655,
+        "digest": "77a0dab2312b4e1e57a84d865a21e5b2ee8d677a21012ada819d0a98988078d3d740f6346bfe0abaa938ca20439a8d71",
+        "event": "",
+        "event_payload": "43616c6c696e6720454649204170706c69636174696f6e2066726f6d20426f6f74204f7074696f6e"
+      },
+      {
+        "imr": 1,
+        "event_type": 4,
+        "digest": "394341b7182cd227c5c6b07ef8000cdfd86136c4292b8e576573ad7ed9ae41019f5818b4b971c9effc60e1ad9f1289f0",
+        "event": "",
+        "event_payload": "00000000"
+      },
+      {
+        "imr": 2,
+        "event_type": 6,
+        "digest": "a68ac6d65dd62f392826c2ae44f6846363ced3418c96574b3e168de9205c8553b8198c3b9d206bc432d70a923c25b098",
+        "event": "",
+        "event_payload": "ed223b8f1a0000004c4f414445445f494d4147453a3a4c6f61644f7074696f6e7300"
+      },
+      {
+        "imr": 2,
+        "event_type": 6,
+        "digest": "21a1d39f7395e15c35b91dacf14714cf2e9ead77e69f076ce164798272c1838312b2d82b3307b91929a4d7dbc6f1e48b",
+        "event": "",
+        "event_payload": "ec223b8f0d0000004c696e757820696e6974726400"
+      },
+      {
+        "imr": 1,
+        "event_type": 2147483655,
+        "digest": "214b0bef1379756011344877743fdc2a5382bac6e70362d624ccf3f654407c1b4badf7d8f9295dd3dabdef65b27677e0",
+        "event": "",
+        "event_payload": "4578697420426f6f7420536572766963657320496e766f636174696f6e"
+      },
+      {
+        "imr": 1,
+        "event_type": 2147483655,
+        "digest": "0a2e01c85deae718a530ad8c6d20a84009babe6c8989269e950d8cf440c6e997695e64d455c4174a652cd080f6230b74",
+        "event": "",
+        "event_payload": "4578697420426f6f742053657276696365732052657475726e656420776974682053756363657373"
+      },
+      {
+        "imr": 3,
+        "event_type": 134217729,
+        "digest": "738ae348dbf674b3399300c0b9416c203e9b645c6ffee233035d09003cccad12f71becc805ad8d97575bc790c6819216",
+        "event": "rootfs-hash",
+        "event_payload": "4a89dadfa8c6be6d312beb51e24ef5bd4b3aeb695f11f4e2ff9c87eac907389b"
+      },
+      {
+        "imr": 3,
+        "event_type": 134217729,
+        "digest": "8ecf784c418ff83b7c8d67adfa7b6c13c93766e0356fd915d038133a170fa09b42ef91aad28642adcee58a0c8a542e7d",
+        "event": "app-id",
+        "event_payload": "9f91439ecacc4f8845a9cd81cc141256d5e1bce3"
+      },
+      {
+        "imr": 3,
+        "event_type": 134217729,
+        "digest": "2ce008f8d73c3d9d6d0a176828da3ae21eea3f748f61d655d142416ac82c19a23eaf239a3654fac97e09588264c439ff",
+        "event": "compose-hash",
+        "event_payload": "9f91439ecacc4f8845a9cd81cc141256d5e1bce3ab2c1533c842402d1a306ff0"
+      },
+      {
+        "imr": 3,
+        "event_type": 134217729,
+        "digest": "5b6a576d1da40f04179ad469e00f90a1c0044bc9e8472d0da2776acb108dc98a73560d42cea6b8b763eb4a0e6d4d82d5",
+        "event": "ca-cert-hash",
+        "event_payload": "d2d9c7c29e3f18e69cba87438cef21eea084c2110858230cd39c5decc629a958"
+      },
+      {
+        "imr": 3,
+        "event_type": 134217729,
+        "digest": "5243ab8e3d13d9b22168b43c901b4559c534d9dafa434bba36e7b86756cdedb58e6cbc9a41473de3e117768f83e2f2cc",
+        "event": "instance-id",
+        "event_payload": "f96d8cde26eacea3712d3a4ffc693c4942701e08"
+      }
+    ],
+    "app_compose": "{\"bash_script\":null,\"docker_compose_file\":\"version: '4.0'\\nservices:\\n    web:\\n        platform: linux/amd64 # Explicitly set for TDX\\n        image: mattdlockyer/based-agent-test:latest@sha256:67b7d2074ac0b6621035b9938f896ed2367707d8384e1e3baa4c0c4c39d05da7\\n        container_name: web\\n        ports:\\n            - '3000:3000'\\n        volumes:\\n            - /var/run/tappd.sock:/var/run/tappd.sock\\n        restart: always\\n\",\"docker_config\":{\"password\":\"\",\"registry\":null,\"username\":\"\"},\"features\":[\"kms\",\"tproxy-net\"],\"kms_enabled\":true,\"manifest_version\":2,\"name\":\"test\",\"pre_launch_script\":\"\\n#!/bin/bash\\necho \\\"----------------------------------------------\\\"\\necho \\\"Running Phala Cloud Pre-Launch Script v0.0.1\\\"\\necho \\\"----------------------------------------------\\\"\\nset -e\\n\\n# Function: Perform Docker cleanup\\nperform_cleanup() {\\n    echo \\\"Pruning unused images\\\"\\n    docker image prune -af\\n    echo \\\"Pruning unused volumes\\\"\\n    docker volume prune -f\\n}\\n\\n# Function: Check Docker login status without exposing credentials\\ncheck_docker_login() {\\n    # Try to verify login status without exposing credentials\\n    if docker info 2>/dev/null | grep -q \\\"Username\\\"; then\\n        return 0\\n    else\\n        return 1\\n    fi\\n}\\n\\n# Function: Check AWS ECR login status\\ncheck_ecr_login() {\\n    # Check if we can access the registry without exposing credentials\\n    if aws ecr get-authorization-token --region $DSTACK_AWS_REGION &>/dev/null; then\\n        return 0\\n    else\\n        return 1\\n    fi\\n}\\n\\n# Main logic starts here\\necho \\\"Starting login process...\\\"\\n\\n# Check if Docker credentials exist\\nif [[ -n \\\"$DSTACK_DOCKER_USERNAME\\\" && -n \\\"$DSTACK_DOCKER_PASSWORD\\\" ]]; then\\n    echo \\\"Docker credentials found\\\"\\n    \\n    # Check if already logged in\\n    if check_docker_login; then\\n        echo \\\"Already logged in to Docker registry\\\"\\n    else\\n        echo \\\"Logging in to Docker registry...\\\"\\n        # Login without exposing password in process list\\n        echo \\\"$DSTACK_DOCKER_PASSWORD\\\" | docker login -u \\\"$DSTACK_DOCKER_USERNAME\\\" --password-stdin\\n        \\n        if [ $? -eq 0 ]; then\\n            echo \\\"Docker login successful\\\"\\n        else\\n            echo \\\"Docker login failed\\\"\\n            exit 1\\n        fi\\n    fi\\n# Check if AWS ECR credentials exist\\nelif [[ -n \\\"$DSTACK_AWS_ACCESS_KEY_ID\\\" && -n \\\"$DSTACK_AWS_SECRET_ACCESS_KEY\\\" && -n \\\"$DSTACK_AWS_REGION\\\" && -n \\\"$DSTACK_AWS_ECR_REGISTRY\\\" ]]; then\\n    echo \\\"AWS ECR credentials found\\\"\\n    \\n    # Check if AWS CLI is installed\\n    if ! command -v aws &> /dev/null; then\\n        echo \\\"AWS CLI not installed, installing...\\\"\\n        curl \\\"https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip\\\" -o \\\"awscliv2.zip\\\"\\n        echo \\\"6ff031a26df7daebbfa3ccddc9af1450 awscliv2.zip\\\" | md5sum -c\\n        if [ $? -ne 0 ]; then\\n            echo \\\"MD5 checksum failed\\\"\\n            exit 1\\n        fi\\n        unzip awscliv2.zip &> /dev/null\\n        ./aws/install\\n        \\n        # Clean up installation files\\n        rm -rf awscliv2.zip aws\\n    else\\n        echo \\\"AWS CLI is already installed: $(which aws)\\\"\\n    fi\\n    \\n    # Configure AWS CLI\\n    aws configure set aws_access_key_id \\\"$DSTACK_AWS_ACCESS_KEY_ID\\\"\\n    aws configure set aws_secret_access_key \\\"$DSTACK_AWS_SECRET_ACCESS_KEY\\\"\\n    aws configure set default.region $DSTACK_AWS_REGION\\n    echo \\\"Logging in to AWS ECR...\\\"\\n    aws ecr get-login-password --region $DSTACK_AWS_REGION | docker login --username AWS --password-stdin \\\"$DSTACK_AWS_ECR_REGISTRY\\\"\\n    if [ $? -eq 0 ]; then\\n        echo \\\"AWS ECR login successful\\\"\\n    else\\n        echo \\\"AWS ECR login failed\\\"\\n        exit 1\\n    fi\\nfi\\n\\nperform_cleanup\\n\\necho \\\"----------------------------------------------\\\"\\necho \\\"Script execution completed\\\"\\necho \\\"----------------------------------------------\\\"\\n\",\"public_logs\":true,\"public_sysinfo\":true,\"runner\":\"docker-compose\",\"salt\":\"6412e8ad-2621-4166-8fdb-8a01df042e15\",\"tproxy_enabled\":true,\"version\":\"1.0.0\"}"
+  }

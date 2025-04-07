@@ -1,0 +1,25 @@
+{
+  "name": "mindshare_agent",
+  "version": "0.0.1",
+  "description": "Agent that use kaito api to get mindshare of some assets and suggest trading decisions",
+  "category": "agent",
+  "tags": [],
+  "details": {
+    "agent": {
+      "defaults": {
+        "model": "llama-v3p1-70b-instruct",
+        "model_provider": "fireworks",
+        "model_temperature": 1.0,
+        "model_max_tokens": 16384
+      }
+    },
+    "requirements": [
+      "near-api-py==0.2.1",
+      "requests==2.31.0",
+      "base58==2.1.1",
+      "ed25519==1.5",
+      "PyNaCl==1.5.0"
+    ]
+  },
+  "show_entry": true
+}
