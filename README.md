@@ -81,7 +81,7 @@ The AI module (LLM) analyzes token mindshare and balances to generate trading de
 - **Secure Signing via MPC.**
 The quote is sent to the Agent Worker contract, which verifies the agent’s identity via its codehash and forwards the signing request to the v1.signer contract. The v1.signer coordinates with the MPC service to securely sign the payload.
 
-> ℹ️ **Note:** The `Agent Worker Smart Contract` is maintained separately at [hasselalcala/agent-worker-contract](update_url_linkt).
+> ℹ️ **Note:** The `Agent Worker Smart Contract` is maintained separately at [Yonder-Labs/mindshare_contract](https://github.com/Yonder-Labs/mindshare_contract).
 
 - **Signature Validation & Intent Formation.**
 Once the signature components (r, s, scalar) are returned, the agent validates the signature and constructs a valid intent.
@@ -207,7 +207,7 @@ AGENT_KEY=ed25519:<private_key> # @dev private key for agent just for developmen
 
 ## 🚀 Usage
 
-> ⚠️ **Before starting the agent**, make sure the `Agent Worker Smart Contract` is deployed and its address is correctly set in your `.env` file (via `SIGN_INTENT_CONTRACT`). You can deploy or view the contract at [hasselalcala/agent-worker-contract](update_url_link).
+> ⚠️ **Before starting the agent**, make sure the `Agent Worker Smart Contract` is deployed and its address is correctly set in your `.env` file (via `SIGN_INTENT_CONTRACT`). You can deploy or view the contract at [Yonder-Labs/mindshare_contract](https://github.com/Yonder-Labs/mindshare_contract).
 
 ### Running the agent locally.
 
