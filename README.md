@@ -171,7 +171,7 @@ ASSET_MAP = {
 1. Clone the repository:
 
 ```bash
-git clone https://github.com/hasselalcala/mindshare_agent
+git clone https://github.com/Yonder-Labs/mindshare_agent
 ```
 
 2. Install dependencies:
