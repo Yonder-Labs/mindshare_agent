@@ -258,8 +258,8 @@ class MindshareScheduler:
                 if result.returncode == 0:
                     print("\nAgent executed successfully")
 
-                    #print(f"\n[LOG] Result: {result.stdout}")
-
+                    #print(f"\n[LOG] Result FROM LLM: {result.stdout}")
+                    
                     balances = {}
                     for line in result.stdout.split('\n'):
                         if line.startswith('Retrieved balances:'):
@@ -277,12 +277,29 @@ class MindshareScheduler:
                         balances
                     )
                     
+                    print(f"\n[LOG] Response from process_llm_suggestion: {response}\n")
+                    # response = {"success": not all_failed,
+                    #             "trades": trades,
+                    #                 "execution_results": responses}
+                    
+                    response = {'error': 'No trades found in LLM response'}
                     if "error" in response:
                         print(f"\n[LOG] Error processing trades: {response['error']}")
                         if attempt < max_retries - 1:
                             print(f"\n[LOG] Retrying... ({attempt + 2}/{max_retries})")
                             time.sleep(2)
                             continue
+                        else:
+                            stdout_lines = result.stdout.split('\n')
+                            last_response = ""
+                            for line in reversed(stdout_lines):
+                                if line.startswith("Assistant: <|start_header_id|>assistant<|end_header_id|>"):
+                                    start_idx = stdout_lines.index(line) + 1
+                                    last_response = "\n".join(stdout_lines[start_idx:])
+                                    break
+                            if last_response:
+                                print("\nNo trades could be processed automatically. Here is the AI suggestion for manual trading:")
+                                print(last_response)
                     elif response.get('success', False):
                         print("\nTrades obtained successfully, obtaining MPC signature...")
                     
