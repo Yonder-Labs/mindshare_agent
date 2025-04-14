@@ -8,6 +8,8 @@ import base64
 import hashlib
 import binascii
 import near_api
+import logging
+from logging.handlers import RotatingFileHandler, TimedRotatingFileHandler
 
 from hashlib import sha256
 from coincurve import PublicKey
@@ -39,9 +41,39 @@ class MindshareScheduler:
         self.network = os.getenv('NETWORK')
         self.worker = AgentWorker()
         self.sign_contract = None 
+        self.setup_logging()
+
+    def setup_logging(self):
+        """Setup logging configuration"""
+        # Create logs directory if it doesn't exist
+        os.makedirs('logs', exist_ok=True)
+        
+        # Get current date for filename
+        current_date = datetime.now().strftime('%Y-%m-%d')
+        
+        # Configure file handler with daily rotation
+        file_handler = TimedRotatingFileHandler(
+            f'logs/mindshare.{current_date}.log',
+            when='midnight',     # Rotate at midnight
+            interval=1,          # Rotate every day
+            backupCount=2,       # Keep 2 backups
+            encoding='utf-8'
+        )
+        
+        # Configure logging format
+        formatter = logging.Formatter(
+            '%(asctime)s - %(levelname)s - %(message)s'
+        )
+        file_handler.setFormatter(formatter)
+        
+        # Setup root logger
+        self.logger = logging.getLogger()
+        self.logger.setLevel(logging.DEBUG)  
+        self.logger.addHandler(file_handler)
 
     async def setup(self, max_attempts=3, retry_delay=10):
         """Initialize everything in the correct order with retries"""
+        self.logger.info("Setting up mindshare agent...")
         for attempt in range(max_attempts):
             try:
                 account_id = None
@@ -50,7 +82,7 @@ class MindshareScheduler:
                 if not self.worker.use_static_account:
                     print(f"\nSetting up ephemeral account (Attempt {attempt + 1}/{max_attempts})")
                     account_id, signing_key = self.worker.derive_ephemeral_account()
-                    
+                    self.logger.debug(f"Ephemeral account created: {account_id}")
                     funded = await self.wait_for_funds(timeout=300)
                     if not funded:
                         print("[ERROR] Account funding timeout reached")
@@ -75,6 +107,7 @@ class MindshareScheduler:
                     await self.sign_contract.startup()
                 
                 registration_success = await self.register_worker(max_attempts=3, retry_delay=10)
+                self.logger.info(f"Worker registration result: {registration_success}")
                 if registration_success:
                     print("Setup completed successfully")
                     return True
@@ -97,6 +130,7 @@ class MindshareScheduler:
 
     async def wait_for_funds(self, timeout=300, check_interval=10):
         """Wait for account to be funded with timeout"""
+        self.logger.info("Waiting for funds...")
         start_time = time.time()
 
         rpc = self.get_rpc()
@@ -125,6 +159,7 @@ class MindshareScheduler:
     
     async def register_worker(self, max_attempts=3, retry_delay=10):
         """Register worker with retries"""
+        self.logger.info("Registering worker...")
         for attempt in range(max_attempts):
             try:
                 is_registered = await self.sign_contract.initialize_worker()
@@ -154,6 +189,7 @@ class MindshareScheduler:
 
     async def start(self):
         """Start the scheduler after setup"""
+        self.logger.info("Starting scheduler...")
         try:
             setup_success = await self.setup()
             if not setup_success:
@@ -183,6 +219,7 @@ class MindshareScheduler:
 
     async def sign_quotes(self, response):
         """Sign each quote in the response"""
+        self.logger.info("Signing quotes...")
         if not response.get('success'):
             return response
             
@@ -227,11 +264,12 @@ class MindshareScheduler:
 
     async def execute_agent(self):
         """Execute agent with retries if no trades are found"""
+        self.logger.info("Executing mindshare agent...")
         max_retries = 3
         for attempt in range(max_retries):
             try:
                 print(f"\nExecuting mindshare agent... (Attempt {attempt + 1}/{max_retries})")
-                
+                self.logger.debug(f"\nExecuting mindshare agent... (Attempt {attempt + 1}/{max_retries})")
                 env_vars = {
                     "KAITO_API_KEY": self.api_key,
                     "ACCOUNT_ID": self.account_id,
@@ -259,6 +297,7 @@ class MindshareScheduler:
                     print("\nAgent executed successfully")
 
                     #print(f"\n[LOG] Result FROM LLM: {result.stdout}")
+                    self.logger.debug(f"\nResult FROM LLM: {result.stdout}")
                     
                     balances = {}
                     for line in result.stdout.split('\n'):
@@ -277,12 +316,10 @@ class MindshareScheduler:
                         balances
                     )
                     
-                    print(f"\n[LOG] Response from process_llm_suggestion: {response}\n")
-                    # response = {"success": not all_failed,
-                    #             "trades": trades,
-                    #                 "execution_results": responses}
+                    self.logger.debug(f"\nResponse from process_llm_suggestion: {response}\n")
                     
-                    response = {'error': 'No trades found in LLM response'}
+                    #response = {'error': 'No trades found in LLM response'}
+                    
                     if "error" in response:
                         print(f"\n[LOG] Error processing trades: {response['error']}")
                         if attempt < max_retries - 1:
@@ -322,7 +359,7 @@ class MindshareScheduler:
                                     print("\nSignature received from MPC contract, verifying signature...")
                                    
                                     is_valid =  verify_signature(payload, signature_data) 
-
+                                    self.logger.debug(f"\nSignature verification result: {is_valid}")
                                     if is_valid:
                                         commitment_rsv = create_commitment_from_mpc_signature_using_rsv(
                                             quote=quote,  
@@ -331,6 +368,7 @@ class MindshareScheduler:
                                         
                                         print(f"\nPublishing intent...")
                                         print("Response from publish_intent: ", publish_intent(commitment_rsv, quote_hash))
+                                        self.logger.debug(f"\nResponse from publish_intent: {publish_intent(commitment_rsv, quote_hash)}")
                                         
                                 elif 'error' in sign_result:
                                     error_str = str(sign_result['error'])
