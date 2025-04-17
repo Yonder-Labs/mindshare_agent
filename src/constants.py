@@ -4,14 +4,6 @@ import os
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 AGENT_PATH = os.path.join(BASE_DIR, "src", "agent")
 
-## List of tokens to be used in the agent
-# NEAR: NEAR
-# Ethereum: ETH, USDC
-# Bitcoin: BTC
-# Solana: SOL, Trump
-# Ripple: XRP
-
-
 # Asset mapping
 ASSET_MAP = {
     'USDC': { 
