@@ -29,6 +29,9 @@ from src.quote.generate_quote import create_commitment_from_mpc_signature_using_
 from src.quote.generate_quote import publish_intent
 from src.quote.generate_quote import PublishIntent
 from src.constants import AGENT_PATH
+from src.constants import ASSET_MAP
+from src.quote.generate_quote import to_decimals
+
 load_dotenv(override=True)
 
 class MindshareScheduler:
@@ -317,8 +320,14 @@ class MindshareScheduler:
                     )
                     
                     self.logger.debug(f"\nResponse from process_llm_suggestion: {response}\n")
+
                     
-                    #response = {'error': 'No trades found in LLM response'}
+                    token_diffs = extract_token_diffs(response)
+                    
+
+                    
+                   
+                
                     
                     if "error" in response:
                         print(f"\n[LOG] Error processing trades: {response['error']}")
@@ -493,6 +502,51 @@ def validate_env_vars():
     if os.getenv('USE_STATIC_ACCOUNT').lower() not in ['true', 'false']:
         raise ValueError("USE_STATIC_ACCOUNT must be either 'true' or 'false'")
 
+def extract_token_diffs(response):
+    token_diffs = []
+    
+    for result in response.get('execution_results', []):
+        try:
+            # Get quote from response
+            quote_str = result['response']['execution_results'][0]['quote']
+            quote_data = json.loads(quote_str)
+            
+            # Extract token_diff from intents
+            if 'intents' in quote_data and quote_data['intents']:
+                diff = quote_data['intents'][0]['diff']
+                token_diffs.append(diff)
+                
+        except Exception as e:
+            print(f"Error extracting token diff: {str(e)}")
+            continue
+    
+    token_id_to_symbol = {v['token_id']: (k, v['decimals']) for k, v in ASSET_MAP.items()}
+
+    print("📊 Daily Agent Report \n\n ✅ Trades executed: \n")
+    token_id_to_asset = {v['token_id']: v for v in ASSET_MAP.values()}
+
+    for diff in token_diffs:
+        tokens = list(diff.items())
+        if len(tokens) != 2:
+            continue  # Skip if not a simple swap
+
+        (token_in_id, amount_in_raw), (token_out_id, amount_out_raw) = tokens
+
+        token_in_info = token_id_to_asset.get(token_in_id)
+        token_out_info = token_id_to_asset.get(token_out_id)
+
+        # Fallback in case the token isn't found in ASSET_MAP
+        token_in_symbol = token_in_info['symbol'] if token_in_info else token_in_id
+        token_out_symbol = token_out_info['symbol'] if token_out_info else token_out_id
+        token_in_decimals = token_in_info['decimals'] if token_in_info else 24
+        token_out_decimals = token_out_info['decimals'] if token_out_info else 24
+
+        # Convert amounts using your function
+        amount_in = to_decimals(abs(int(amount_in_raw)), token_in_decimals)
+        amount_out = to_decimals(abs(int(amount_out_raw)), token_out_decimals)
+
+        print(f"Swap {amount_in} {token_in_symbol} -> {amount_out} {token_out_symbol}")
+    return token_diffs
 
 def main():
     print("\nStarting Scheduler...")

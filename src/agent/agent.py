@@ -160,4 +160,3 @@ List all trades first, then briefly explain your reasoning. Only skip trades if 
     env.request_user_input()
     
 run(env)
-
