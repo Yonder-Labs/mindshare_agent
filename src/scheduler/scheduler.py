@@ -9,8 +9,10 @@ import hashlib
 import binascii
 import near_api
 import logging
-from logging.handlers import RotatingFileHandler, TimedRotatingFileHandler
+import contextlib
+import io
 
+from logging.handlers import RotatingFileHandler, TimedRotatingFileHandler
 from hashlib import sha256
 from coincurve import PublicKey
 from datetime import datetime
@@ -21,6 +23,7 @@ from typing import Dict, Any
 from eth_keys import keys
 from eth_utils import decode_hex
 from near_api.providers import JsonProvider, JsonProviderError
+from decimal import Decimal
 
 from src.worker.keypair import AgentWorker
 from src.quote.generate_quote import process_llm_suggestion
@@ -30,7 +33,7 @@ from src.quote.generate_quote import publish_intent
 from src.quote.generate_quote import PublishIntent
 from src.constants import AGENT_PATH
 from src.constants import ASSET_MAP
-from src.quote.generate_quote import to_decimals
+from src.quote.generate_quote import get_asset_id
 
 load_dotenv(override=True)
 
@@ -320,15 +323,10 @@ class MindshareScheduler:
                     )
                     
                     self.logger.debug(f"\nResponse from process_llm_suggestion: {response}\n")
-
                     
-                    token_diffs = extract_token_diffs(response)
-                    
-
-                    
+                    report = extract_token_diffs(response)
+                    self.logger.debug(f"\nReport: {report}")
                    
-                
-                    
                     if "error" in response:
                         print(f"\n[LOG] Error processing trades: {response['error']}")
                         if attempt < max_retries - 1:
@@ -378,6 +376,8 @@ class MindshareScheduler:
                                         print(f"\nPublishing intent...")
                                         print("Response from publish_intent: ", publish_intent(commitment_rsv, quote_hash))
                                         self.logger.debug(f"\nResponse from publish_intent: {publish_intent(commitment_rsv, quote_hash)}")
+
+                                        print("\n", report)
                                         
                                 elif 'error' in sign_result:
                                     error_str = str(sign_result['error'])
@@ -504,7 +504,7 @@ def validate_env_vars():
 
 def extract_token_diffs(response):
     token_diffs = []
-    
+    agent_report = ""
     for result in response.get('execution_results', []):
         try:
             # Get quote from response
@@ -522,7 +522,7 @@ def extract_token_diffs(response):
     
     token_id_to_symbol = {v['token_id']: (k, v['decimals']) for k, v in ASSET_MAP.items()}
 
-    print("📊 Daily Agent Report \n\n ✅ Trades executed: \n")
+    agent_report += "\n📊 Daily Agent Report \n\n✅ Trades executed: \n"
     token_id_to_asset = {v['token_id']: v for v in ASSET_MAP.values()}
 
     for diff in token_diffs:
@@ -534,19 +534,108 @@ def extract_token_diffs(response):
 
         token_in_info = token_id_to_asset.get(token_in_id)
         token_out_info = token_id_to_asset.get(token_out_id)
-
-        # Fallback in case the token isn't found in ASSET_MAP
-        token_in_symbol = token_in_info['symbol'] if token_in_info else token_in_id
-        token_out_symbol = token_out_info['symbol'] if token_out_info else token_out_id
-        token_in_decimals = token_in_info['decimals'] if token_in_info else 24
-        token_out_decimals = token_out_info['decimals'] if token_out_info else 24
-
+    
+        amount_in_raw = amount_in_raw.lstrip('-')
+        
         # Convert amounts using your function
-        amount_in = to_decimals(abs(int(amount_in_raw)), token_in_decimals)
-        amount_out = to_decimals(abs(int(amount_out_raw)), token_out_decimals)
+        amount_in = format_decimals_for_display(amount_in_raw, token_in_info['decimals'])
+        amount_out = format_decimals_for_display(amount_out_raw, token_out_info['decimals'])
 
-        print(f"Swap {amount_in} {token_in_symbol} -> {amount_out} {token_out_symbol}")
-    return token_diffs
+        amount_in_float = float(amount_in)
+        amount_out_float = float(amount_out)
+        implicit_price = amount_in_float / amount_out_float
+
+        agent_report += f"Swap {amount_in_float} {token_in_info['symbol']} -> {amount_out_float} {token_out_info['symbol']} (Bought at ~ {implicit_price} {token_in_info['symbol']}/{token_out_info['symbol']})\n"
+
+    agent_report += "\n💼 Current holdings:\n\n"
+
+    account_id = os.getenv('INTENT_ACCOUNT_ID')
+    private_key = os.getenv('INTENT_PRIVATE_KEY')
+    network = os.getenv('NETWORK')
+
+    provider = get_provider(network)
+
+    account = get_account(account_id, private_key, provider)
+    balances = get_account_balances(account)
+    for token, amount in balances.items():
+        if token != 'WNEAR':
+            agent_report += f"{amount} {token}\n"
+
+    return agent_report
+
+
+def get_provider(network):
+    if network == 'testnet':
+        return 'https://rpc.testnet.near.org'
+    else:
+        return 'https://rpc.mainnet.near.org'
+    
+def format_decimals_for_display(amount, decimals):
+    try:
+        # Convert amount to string if it isn't already
+        amount_str = str(amount)
+        
+        # If negative, remove the sign for processing
+        is_negative = amount_str.startswith('-')
+        if is_negative:
+            amount_str = amount_str[1:]
+            
+        # Add zeros if needed
+        if len(amount_str) <= decimals:
+            amount_str = '0' * (decimals - len(amount_str) + 1) + amount_str
+            
+        # Insert decimal point
+        insert_pos = len(amount_str) - decimals
+        result = amount_str[:insert_pos] + '.' + amount_str[insert_pos:]
+        
+        # Add back negative sign if needed
+        if is_negative:
+            result = '-' + result
+            
+        return result
+        
+    except Exception as e:
+        print(f"Error in format_decimals_for_display - amount: {amount}, decimals: {decimals}")
+        return str(amount)  # Return original amount if formatting fails
+
+def get_account(account_id, private_key, provider):
+    # Redirect stdout to suppress output
+    with contextlib.redirect_stdout(io.StringIO()):
+        near_provider = near_api.providers.JsonProvider(provider)
+        key_pair = near_api.signer.KeyPair(private_key)
+        signer = near_api.signer.Signer(account_id, key_pair)
+        return near_api.account.Account(near_provider, signer, account_id)
+
+def get_account_balances(account):
+    """Get all assets for an account in intents.near contract"""
+    balances = {}
+    
+    for token, info in ASSET_MAP.items():
+        try:
+            result = account.view_function(
+                "intents.near",
+                "mt_balance_of",
+                {
+                    "account_id": account.account_id,
+                    "token_id": get_asset_id(token)
+                }
+            )
+            
+            if isinstance(result, dict) and 'result' in result:
+                balance_str = result['result']
+                if balance_str:
+                    balance = Decimal(balance_str) / Decimal(str(10 ** info['decimals']))
+                    if balance > 0:
+                        balances[token] = float(balance)
+                    else:
+                        balances[token] = 0
+            
+        except Exception as e:
+            print(f"Error getting balance for {token}: {str(e)}")
+            continue
+    
+    return balances
+
 
 def main():
     print("\nStarting Scheduler...")

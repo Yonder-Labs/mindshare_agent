@@ -6,12 +6,16 @@ import requests
 from datetime import datetime, timedelta
 from decimal import Decimal
 from src.constants import ASSET_MAP
+import contextlib
+import io
 
 def get_account(account_id, private_key, provider):
-    near_provider = near_api.providers.JsonProvider(provider)
-    key_pair = near_api.signer.KeyPair(private_key)
-    signer = near_api.signer.Signer(account_id, key_pair)
-    return near_api.account.Account(near_provider, signer, account_id)
+    # Redirect stdout to suppress output
+    with contextlib.redirect_stdout(io.StringIO()):
+        near_provider = near_api.providers.JsonProvider(provider)
+        key_pair = near_api.signer.KeyPair(private_key)
+        signer = near_api.signer.Signer(account_id, key_pair)
+        return near_api.account.Account(near_provider, signer, account_id)
 
 def get_asset_id(token):
     if token == 'NEAR':
