@@ -376,8 +376,6 @@ class MindshareScheduler:
                                         print(f"\nPublishing intent...")
                                         print("Response from publish_intent: ", publish_intent(commitment_rsv, quote_hash))
                                         self.logger.debug(f"\nResponse from publish_intent: {publish_intent(commitment_rsv, quote_hash)}")
-
-                                        print("\n", report)
                                         
                                 elif 'error' in sign_result:
                                     error_str = str(sign_result['error'])
@@ -388,6 +386,7 @@ class MindshareScheduler:
                                     else:
                                         print(f"[LOG] Error signing quote: {sign_result['error']}")
                                         continue
+                        print("\n", report)
                         break  # Exit retry loop on success
                     else:
                         print("\n[LOG] No trades were executed successfully")
