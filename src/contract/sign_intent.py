@@ -104,15 +104,19 @@ class SignIntentContract:
             
             tcb_info = json.dumps(parsed_tcb_info, ensure_ascii=False, separators=(',', ':'))
 
-            random_num_string = str(random.random())
+            #random_num_string = str(random.random())
 
             quote_response = await AsyncTappdClient().tdx_quote(
-                report_data=random_num_string,
-                hash_algorithm='sha256'
+                #report_data=random_num_string,
+                report_data=self.worker_account.account_id,
+                hash_algorithm='raw'
             )
             
             quote_hex = quote_response.quote 
             
+            if quote_hex.startswith('0x'):
+                quote_hex = quote_hex[2:] 
+
             files = {
                 'hex': (None, quote_hex, 'text/plain')  # (filename, data, content_type)
             }
@@ -128,6 +132,11 @@ class SignIntentContract:
                 
                 checksum = res_data['checksum']
                 collateral = json.dumps(res_data['quote_collateral'])
+
+            print(f"\n -> [LOG] Quote hex: {quote_hex}")
+            print(f"\n -> [LOG] Collateral: {collateral}")
+            print(f"\n -> [LOG] Checksum: {checksum}")
+            print(f"\n -> [LOG] TCB info: {tcb_info}")
         
             result = await self.worker_account.function_call(
                 self.contract_id,
