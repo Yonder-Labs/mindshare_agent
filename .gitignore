@@ -42,3 +42,4 @@ backup.json
 
 .llm_cache/
 .DS_Store
+logs/

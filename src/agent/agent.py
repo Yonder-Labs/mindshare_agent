@@ -6,12 +6,16 @@ import requests
 from datetime import datetime, timedelta
 from decimal import Decimal
 from src.constants import ASSET_MAP
+import contextlib
+import io
 
 def get_account(account_id, private_key, provider):
-    near_provider = near_api.providers.JsonProvider(provider)
-    key_pair = near_api.signer.KeyPair(private_key)
-    signer = near_api.signer.Signer(account_id, key_pair)
-    return near_api.account.Account(near_provider, signer, account_id)
+    # Redirect stdout to suppress output
+    with contextlib.redirect_stdout(io.StringIO()):
+        near_provider = near_api.providers.JsonProvider(provider)
+        key_pair = near_api.signer.KeyPair(private_key)
+        signer = near_api.signer.Signer(account_id, key_pair)
+        return near_api.account.Account(near_provider, signer, account_id)
 
 def get_asset_id(token):
     if token == 'NEAR':
@@ -118,24 +122,39 @@ def run(env: Environment):
             env.add_reply(f"Error: No data available for {token}")
 
     prompt = {
-        "role": "system", 
-        "content": f"""Analyze ONLY the following tokens in the whitelist asset map {list(ASSET_MAP.keys())} and user'sportfolio: {list(balances.keys())} (do not add or assume other tokens). 
-        For each suggested trade, consider that EXACT_AMOUNT MUST be less than the users's balance to avoid overflow or insufficient balance problems to pay the fees, provide the exact format:
-        TRADE:
-        - token_in: [TOKEN]
-        - amount_in: [PERCENTAGE]% of current balance ([EXACT_AMOUNT])
-        - token_out: [TOKEN]
-        
-        Example format:
-        TRADE:
-        - token_in: ETH
-        - amount_in: 15% of current balance (39.31539)
-        - token_out: USDC
-        
-        Provide trading decisions and explain the rationale after listing all trades. Keep in mind that the user's balance is limited and you need to consider the fees. So if the amount 
-        to be trade is equal to the balance of that token, apply a 10% fee to the amount to be traded, to be able to pay the fees."""
-    
-    }
+    "role": "system",
+    "content": f"""
+You are an autonomous trading agent responsible for rebalancing the user's portfolio based on current holdings and a whitelist of allowed tokens. Your objective is to identify strong opportunities and take bold action when needed — don't play it too safe.
+
+Only analyze the following tokens (whitelist): {list(ASSET_MAP.keys())}
+Current portfolio: {list(balances.keys())}
+Do not include or assume any other tokens outside of the whitelist.
+
+You MUST strictly follow these rules:
+- Only use tokens the user currently holds as token_in.
+- For token_out, you may choose any token in the whitelist, even if it's not currently held by the user.
+- Do not suggest any token that is not listed in the whitelist.
+- For every trade, the EXACT_AMOUNT MUST be less than the user's balance for that token.
+- If you're trading nearly the full amount (e.g. 100%), subtract a 10% buffer to account for fees and avoid insufficient balance errors.
+
+You are encouraged to make meaningful trades, especially when the signal is strong. Avoid proposing tiny trades unless they are clearly justified. Your goal is to optimize the portfolio efficiently.
+
+Use the following format for each suggestion:
+
+TRADE:
+- token_in: [TOKEN]
+- amount_in: [PERCENTAGE]% of current balance ([EXACT_AMOUNT])
+- token_out: [TOKEN]
+
+Example:
+TRADE:
+- token_in: ETH
+- amount_in: 35% of current balance (1.754)
+- token_out: USDC
+
+List all trades first, then briefly explain your reasoning. Only skip trades if there's a clear reason to hold.
+"""
+}
     
     print(f"Sending prompt to LLM: {prompt}")
     messages = env.list_messages()
@@ -145,4 +164,3 @@ def run(env: Environment):
     env.request_user_input()
     
 run(env)
-

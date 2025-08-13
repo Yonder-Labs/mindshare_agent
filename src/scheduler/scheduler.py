@@ -8,7 +8,11 @@ import base64
 import hashlib
 import binascii
 import near_api
+import logging
+import contextlib
+import io
 
+from logging.handlers import RotatingFileHandler, TimedRotatingFileHandler
 from hashlib import sha256
 from coincurve import PublicKey
 from datetime import datetime
@@ -19,6 +23,7 @@ from typing import Dict, Any
 from eth_keys import keys
 from eth_utils import decode_hex
 from near_api.providers import JsonProvider, JsonProviderError
+from decimal import Decimal
 
 from src.worker.keypair import AgentWorker
 from src.quote.generate_quote import process_llm_suggestion
@@ -27,6 +32,9 @@ from src.quote.generate_quote import create_commitment_from_mpc_signature_using_
 from src.quote.generate_quote import publish_intent
 from src.quote.generate_quote import PublishIntent
 from src.constants import AGENT_PATH
+from src.constants import ASSET_MAP
+from src.quote.generate_quote import get_asset_id
+
 load_dotenv(override=True)
 
 class MindshareScheduler:
@@ -39,9 +47,39 @@ class MindshareScheduler:
         self.network = os.getenv('NETWORK')
         self.worker = AgentWorker()
         self.sign_contract = None 
+        self.setup_logging()
+
+    def setup_logging(self):
+        """Setup logging configuration"""
+        # Create logs directory if it doesn't exist
+        os.makedirs('logs', exist_ok=True)
+        
+        # Get current date for filename
+        current_date = datetime.now().strftime('%Y-%m-%d')
+        
+        # Configure file handler with daily rotation
+        file_handler = TimedRotatingFileHandler(
+            f'logs/mindshare.{current_date}.log',
+            when='midnight',     # Rotate at midnight
+            interval=1,          # Rotate every day
+            backupCount=2,       # Keep 2 backups
+            encoding='utf-8'
+        )
+        
+        # Configure logging format
+        formatter = logging.Formatter(
+            '%(asctime)s - %(levelname)s - %(message)s'
+        )
+        file_handler.setFormatter(formatter)
+        
+        # Setup root logger
+        self.logger = logging.getLogger()
+        self.logger.setLevel(logging.DEBUG)  
+        self.logger.addHandler(file_handler)
 
     async def setup(self, max_attempts=3, retry_delay=10):
         """Initialize everything in the correct order with retries"""
+        self.logger.info("Setting up mindshare agent...")
         for attempt in range(max_attempts):
             try:
                 account_id = None
@@ -50,7 +88,7 @@ class MindshareScheduler:
                 if not self.worker.use_static_account:
                     print(f"\nSetting up ephemeral account (Attempt {attempt + 1}/{max_attempts})")
                     account_id, signing_key = self.worker.derive_ephemeral_account()
-                    
+                    self.logger.debug(f"Ephemeral account created: {account_id}")
                     funded = await self.wait_for_funds(timeout=300)
                     if not funded:
                         print("[ERROR] Account funding timeout reached")
@@ -75,6 +113,7 @@ class MindshareScheduler:
                     await self.sign_contract.startup()
                 
                 registration_success = await self.register_worker(max_attempts=3, retry_delay=10)
+                self.logger.info(f"Worker registration result: {registration_success}")
                 if registration_success:
                     print("Setup completed successfully")
                     return True
@@ -97,6 +136,7 @@ class MindshareScheduler:
 
     async def wait_for_funds(self, timeout=300, check_interval=10):
         """Wait for account to be funded with timeout"""
+        self.logger.info("Waiting for funds...")
         start_time = time.time()
 
         rpc = self.get_rpc()
@@ -125,6 +165,7 @@ class MindshareScheduler:
     
     async def register_worker(self, max_attempts=3, retry_delay=10):
         """Register worker with retries"""
+        self.logger.info("Registering worker...")
         for attempt in range(max_attempts):
             try:
                 is_registered = await self.sign_contract.initialize_worker()
@@ -154,6 +195,7 @@ class MindshareScheduler:
 
     async def start(self):
         """Start the scheduler after setup"""
+        self.logger.info("Starting scheduler...")
         try:
             setup_success = await self.setup()
             if not setup_success:
@@ -183,6 +225,7 @@ class MindshareScheduler:
 
     async def sign_quotes(self, response):
         """Sign each quote in the response"""
+        self.logger.info("Signing quotes...")
         if not response.get('success'):
             return response
             
@@ -227,11 +270,12 @@ class MindshareScheduler:
 
     async def execute_agent(self):
         """Execute agent with retries if no trades are found"""
+        self.logger.info("Executing mindshare agent...")
         max_retries = 3
         for attempt in range(max_retries):
             try:
                 print(f"\nExecuting mindshare agent... (Attempt {attempt + 1}/{max_retries})")
-                
+                self.logger.debug(f"\nExecuting mindshare agent... (Attempt {attempt + 1}/{max_retries})")
                 env_vars = {
                     "KAITO_API_KEY": self.api_key,
                     "ACCOUNT_ID": self.account_id,
@@ -258,8 +302,9 @@ class MindshareScheduler:
                 if result.returncode == 0:
                     print("\nAgent executed successfully")
 
-                    #print(f"\n[LOG] Result: {result.stdout}")
-
+                    #print(f"\n[LOG] Result FROM LLM: {result.stdout}")
+                    self.logger.debug(f"\nResult FROM LLM: {result.stdout}")
+                    
                     balances = {}
                     for line in result.stdout.split('\n'):
                         if line.startswith('Retrieved balances:'):
@@ -277,12 +322,28 @@ class MindshareScheduler:
                         balances
                     )
                     
+                    self.logger.debug(f"\nResponse from process_llm_suggestion: {response}\n")
+                    
+                    report = extract_token_diffs(response)
+                    self.logger.debug(f"\nReport: {report}")
+                   
                     if "error" in response:
                         print(f"\n[LOG] Error processing trades: {response['error']}")
                         if attempt < max_retries - 1:
                             print(f"\n[LOG] Retrying... ({attempt + 2}/{max_retries})")
                             time.sleep(2)
                             continue
+                        else:
+                            stdout_lines = result.stdout.split('\n')
+                            last_response = ""
+                            for line in reversed(stdout_lines):
+                                if line.startswith("Assistant: <|start_header_id|>assistant<|end_header_id|>"):
+                                    start_idx = stdout_lines.index(line) + 1
+                                    last_response = "\n".join(stdout_lines[start_idx:])
+                                    break
+                            if last_response:
+                                print("\nNo trades could be processed automatically. Here is the AI suggestion for manual trading:")
+                                print(last_response)
                     elif response.get('success', False):
                         print("\nTrades obtained successfully, obtaining MPC signature...")
                     
@@ -305,7 +366,7 @@ class MindshareScheduler:
                                     print("\nSignature received from MPC contract, verifying signature...")
                                    
                                     is_valid =  verify_signature(payload, signature_data) 
-
+                                    self.logger.debug(f"\nSignature verification result: {is_valid}")
                                     if is_valid:
                                         commitment_rsv = create_commitment_from_mpc_signature_using_rsv(
                                             quote=quote,  
@@ -314,6 +375,7 @@ class MindshareScheduler:
                                         
                                         print(f"\nPublishing intent...")
                                         print("Response from publish_intent: ", publish_intent(commitment_rsv, quote_hash))
+                                        self.logger.debug(f"\nResponse from publish_intent: {publish_intent(commitment_rsv, quote_hash)}")
                                         
                                 elif 'error' in sign_result:
                                     error_str = str(sign_result['error'])
@@ -324,6 +386,7 @@ class MindshareScheduler:
                                     else:
                                         print(f"[LOG] Error signing quote: {sign_result['error']}")
                                         continue
+                        print("\n", report)
                         break  # Exit retry loop on success
                     else:
                         print("\n[LOG] No trades were executed successfully")
@@ -437,6 +500,140 @@ def validate_env_vars():
         
     if os.getenv('USE_STATIC_ACCOUNT').lower() not in ['true', 'false']:
         raise ValueError("USE_STATIC_ACCOUNT must be either 'true' or 'false'")
+
+def extract_token_diffs(response):
+    token_diffs = []
+    agent_report = ""
+    for result in response.get('execution_results', []):
+        try:
+            # Get quote from response
+            quote_str = result['response']['execution_results'][0]['quote']
+            quote_data = json.loads(quote_str)
+            
+            # Extract token_diff from intents
+            if 'intents' in quote_data and quote_data['intents']:
+                diff = quote_data['intents'][0]['diff']
+                token_diffs.append(diff)
+                
+        except Exception as e:
+            print(f"Error extracting token diff: {str(e)}")
+            continue
+    
+    token_id_to_symbol = {v['token_id']: (k, v['decimals']) for k, v in ASSET_MAP.items()}
+
+    agent_report += "\n📊 Daily Agent Report \n\n✅ Trades executed: \n"
+    token_id_to_asset = {v['token_id']: v for v in ASSET_MAP.values()}
+
+    for diff in token_diffs:
+        tokens = list(diff.items())
+        if len(tokens) != 2:
+            continue  # Skip if not a simple swap
+
+        (token_in_id, amount_in_raw), (token_out_id, amount_out_raw) = tokens
+
+        token_in_info = token_id_to_asset.get(token_in_id)
+        token_out_info = token_id_to_asset.get(token_out_id)
+    
+        amount_in_raw = amount_in_raw.lstrip('-')
+        
+        # Convert amounts using your function
+        amount_in = format_decimals_for_display(amount_in_raw, token_in_info['decimals'])
+        amount_out = format_decimals_for_display(amount_out_raw, token_out_info['decimals'])
+
+        amount_in_float = float(amount_in)
+        amount_out_float = float(amount_out)
+        implicit_price = amount_in_float / amount_out_float
+
+        agent_report += f"Swap {amount_in_float} {token_in_info['symbol']} -> {amount_out_float} {token_out_info['symbol']} (Bought at ~ {implicit_price} {token_in_info['symbol']}/{token_out_info['symbol']})\n"
+
+    agent_report += "\n💼 Current holdings:\n\n"
+
+    account_id = os.getenv('INTENT_ACCOUNT_ID')
+    private_key = os.getenv('INTENT_PRIVATE_KEY')
+    network = os.getenv('NETWORK')
+
+    provider = get_provider(network)
+
+    account = get_account(account_id, private_key, provider)
+    balances = get_account_balances(account)
+    for token, amount in balances.items():
+        if token != 'WNEAR':
+            agent_report += f"{amount} {token}\n"
+
+    return agent_report
+
+
+def get_provider(network):
+    if network == 'testnet':
+        return 'https://rpc.testnet.near.org'
+    else:
+        return 'https://rpc.mainnet.near.org'
+    
+def format_decimals_for_display(amount, decimals):
+    try:
+        # Convert amount to string if it isn't already
+        amount_str = str(amount)
+        
+        # If negative, remove the sign for processing
+        is_negative = amount_str.startswith('-')
+        if is_negative:
+            amount_str = amount_str[1:]
+            
+        # Add zeros if needed
+        if len(amount_str) <= decimals:
+            amount_str = '0' * (decimals - len(amount_str) + 1) + amount_str
+            
+        # Insert decimal point
+        insert_pos = len(amount_str) - decimals
+        result = amount_str[:insert_pos] + '.' + amount_str[insert_pos:]
+        
+        # Add back negative sign if needed
+        if is_negative:
+            result = '-' + result
+            
+        return result
+        
+    except Exception as e:
+        print(f"Error in format_decimals_for_display - amount: {amount}, decimals: {decimals}")
+        return str(amount)  # Return original amount if formatting fails
+
+def get_account(account_id, private_key, provider):
+    # Redirect stdout to suppress output
+    with contextlib.redirect_stdout(io.StringIO()):
+        near_provider = near_api.providers.JsonProvider(provider)
+        key_pair = near_api.signer.KeyPair(private_key)
+        signer = near_api.signer.Signer(account_id, key_pair)
+        return near_api.account.Account(near_provider, signer, account_id)
+
+def get_account_balances(account):
+    """Get all assets for an account in intents.near contract"""
+    balances = {}
+    
+    for token, info in ASSET_MAP.items():
+        try:
+            result = account.view_function(
+                "intents.near",
+                "mt_balance_of",
+                {
+                    "account_id": account.account_id,
+                    "token_id": get_asset_id(token)
+                }
+            )
+            
+            if isinstance(result, dict) and 'result' in result:
+                balance_str = result['result']
+                if balance_str:
+                    balance = Decimal(balance_str) / Decimal(str(10 ** info['decimals']))
+                    if balance > 0:
+                        balances[token] = float(balance)
+                    else:
+                        balances[token] = 0
+            
+        except Exception as e:
+            print(f"Error getting balance for {token}: {str(e)}")
+            continue
+    
+    return balances
 
 
 def main():

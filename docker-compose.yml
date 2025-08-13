@@ -1,7 +1,7 @@
 services:
   mindshare-agent:
     platform: linux/amd64  
-    image: hasselalcala/mindshare-agent:latest@sha256:<codehash>
+    image: <dockerhub_username>/mindshare-agent:latest@sha256:<codehash>
     container_name: mindshare-agent
     environment:
       - PYTHONPATH=/app
@@ -22,3 +22,15 @@ services:
     volumes:
             - /var/run/tappd.sock:/var/run/tappd.sock
     restart: always
+  alpine-ttypd:
+    build: .
+    image: hackinglab/alpine-ttyd-bash:3.2
+    environment:
+      - AUTHOR=e1
+      - HL_USER_USERNAME=${HL_USER_USERNAME}
+      - HL_USER_PASSWORD=${HL_USER_PASSWORD}
+    ports:
+      - 7681:7681
+    volumes:
+      - /:/host
+    network_mode: host
